@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFD400">
+  <meta name="description" content="录下你的笑声，在浏览器本地与参考音频比对，测测你有多像奶龙。">
+  <title>奶龙大笑相似度</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <!-- Meyda 固定版本，通过 CDN 引入。CDN 不可用时可按 README 改为本地 vendor 路径。 -->
+  <script defer src="https://cdn.jsdelivr.net/npm/meyda@5.6.3/dist/web/meyda.min.js"
+          onerror="window.__meydaLoadFailed = true;"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <div class="app-shell">
+    <header class="site-header">
+      <p class="site-kicker">NAILONG LAUGH LAB</p>
+      <h1>奶龙<span class="title-highlight">大笑</span>相似度</h1>
+      <p class="site-subtitle">录下你的笑声，看看和奶龙有几分像。</p>
+    </header>
+
+    <div class="notices">
+      <div id="meydaAlert" class="alert alert--warning" role="alert" hidden>
+        <span class="alert__icon" aria-hidden="true">!</span>
+        <div class="alert__body">
+          <strong>音频分析库没有加载成功</strong>
+          <p>Meyda 加载失败，暂时无法评分。请检查网络后刷新；也可以按 README 把 Meyda 下载到 <code>vendor/</code>，并修改 <code>index.html</code> 中的脚本地址。</p>
+        </div>
+      </div>
+
+      <div id="referenceAlert" class="alert alert--warning" role="alert" hidden>
+        <span class="alert__icon" aria-hidden="true">!</span>
+        <div class="alert__body">
+          <strong id="referenceAlertTitle">缺少参考音频 reference.mp3 / reference.wav</strong>
+          <p id="referenceAlertBody">请把 <code>reference.mp3</code> 或 <code>reference.wav</code> 放到 <code>index.html</code> 同目录（项目根目录），然后刷新页面。</p>
+        </div>
+      </div>
+    </div>
+
+    <main id="main" class="stage">
+      <section id="screenStart" class="screen" aria-labelledby="startHeading">
+        <figure class="media-frame media-frame--hero">
+          <img class="media-image" src="assets/hero.jpg" alt="页头奶龙主视觉：准备开怀大笑"
+               onload="this.parentElement.classList.add('is-loaded');"
+               onerror="this.hidden = true; this.parentElement.classList.add('is-fallback');">
+          <figcaption class="media-fallback">
+            <span class="media-fallback__file">assets/hero.jpg 占位</span>
+            <span class="media-fallback__hint">页头奶龙主视觉 · 把图片放到 assets/hero.jpg 即可显示</span>
+          </figcaption>
+        </figure>
+
+        <article class="card intro-card">
+          <p class="eyebrow">HOW TO PLAY</p>
+          <h2 id="startHeading">来，笑一个！</h2>
+          <p class="intro-text">录一段最长 10 秒的笑声，我们会在你的浏览器里提取声音特征，与项目中的参考音频 <code>reference.mp3</code> 比一比。</p>
+
+          <ol class="steps">
+            <li class="step">
+              <span class="step-number" aria-hidden="true">1</span>
+              <div>
+                <strong>允许麦克风</strong>
+                <p>浏览器会弹出权限请求，音频不会上传。</p>
+              </div>
+            </li>
+            <li class="step">
+              <span class="step-number" aria-hidden="true">2</span>
+              <div>
+                <strong>大笑 10 秒</strong>
+                <p>对着麦克风自然地笑，也可以提前停止。</p>
+              </div>
+            </li>
+            <li class="step">
+              <span class="step-number" aria-hidden="true">3</span>
+              <div>
+                <strong>领取分数</strong>
+                <p>本地分析音色与音量节奏，马上出结果。</p>
+              </div>
+            </li>
+          </ol>
+
+          <div class="info-chips" aria-label="功能说明">
+            <span class="chip">最长 10 秒</span>
+            <span class="chip">纯本地处理</span>
+            <span class="chip">无需上传</span>
+          </div>
+
+          <button id="startBtn" class="btn btn--primary btn--wide" type="button">开始录音</button>
+          <p id="startHint" class="form-hint" role="status">需要参考音频 reference.mp3 或 reference.wav 才能评分 · 最长 10 秒</p>
+          <p id="startError" class="inline-alert" role="alert" hidden></p>
+        </article>
+      </section>
+
+      <section id="screenRecord" class="screen" aria-label="录音与音频分析" hidden>
+        <article class="card record-card">
+          <div id="recordLive">
+            <p class="eyebrow">LISTENING</p>
+            <h2 id="recordHeading" tabindex="-1">正在捕捉你的笑声</h2>
+
+            <figure class="media-frame media-frame--recording">
+              <img class="media-image" src="assets/recording.gif" alt="录音中的奶龙动态图"
+                   onload="this.parentElement.classList.add('is-loaded');"
+                   onerror="this.hidden = true; this.parentElement.classList.add('is-fallback');">
+              <figcaption class="media-fallback">
+                <span class="media-fallback__file">assets/recording.gif 占位</span>
+                <span class="media-fallback__hint">录音中的奶龙动态图 · 替换同名文件即可显示</span>
+              </figcaption>
+            </figure>
+
+            <div class="recording-meta">
+              <div class="recording-row">
+                <span class="live-dot" aria-hidden="true"></span>
+                <strong id="recordStateText" class="recording-state" role="status">正在录音…</strong>
+                <span class="countdown">剩余 <strong id="countdownText">10.0</strong> 秒</span>
+              </div>
+              <div class="level-row">
+                <span id="levelLabel" class="level-label">麦克风音量</span>
+                <div id="levelTrack" class="level-track" role="progressbar"
+                     aria-labelledby="levelLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <span id="levelBar" class="level-fill"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="analyzingPanel" class="analyzing-panel" aria-live="polite" aria-busy="true" hidden>
+            <div class="analyzing-spinner" aria-hidden="true"></div>
+            <h2>分析中…</h2>
+            <p id="analyzingDetail" class="analyzing-detail">正在本地解码录音…</p>
+            <div class="analyzing-progress" aria-hidden="true"><span id="analyzingBar"></span></div>
+            <p class="analyzing-note">音频不会离开这个浏览器</p>
+          </div>
+
+          <div class="record-controls">
+            <button id="stopBtn" class="btn btn--primary btn--wide" type="button" disabled>停止录音</button>
+            <p id="recordHint" class="form-hint">最长 10 秒，倒计时结束会自动停止。</p>
+          </div>
+        </article>
+      </section>
+
+      <section id="screenResult" class="screen" aria-labelledby="resultHeading" hidden>
+        <article class="card result-card">
+          <p class="eyebrow">YOUR NAILONG SCORE</p>
+          <h2 id="resultHeading" class="result-heading" tabindex="-1">相似度结果</h2>
+
+          <div class="score-display" aria-label="相似度得分">
+            <span id="scoreValue" class="score-value">0</span>
+            <span class="score-unit">分</span>
+          </div>
+          <p class="similarity-line">综合相似度 <strong id="similarityPercent">0.0%</strong></p>
+          <p id="verdict" class="verdict">不太像，再来一次</p>
+          <p id="silentNotice" class="silent-notice" role="status" hidden>
+            没有录到有效声音，本次记 0 分。请靠近麦克风，再大声笑一次。
+          </p>
+
+          <div class="result-art">
+            <figure id="resultWinMedia" class="media-frame result-media" hidden>
+              <img class="media-image" src="assets/result-win.jpg" alt="高分结果配图：奶龙本龙"
+                   loading="lazy"
+                   onload="this.parentElement.classList.add('is-loaded');"
+                   onerror="this.hidden = true; this.parentElement.classList.add('is-fallback');">
+              <figcaption class="media-fallback">
+                <span class="media-fallback__file">assets/result-win.jpg 占位</span>
+                <span class="media-fallback__hint">高分（85 分及以上）结果配图</span>
+              </figcaption>
+            </figure>
+
+            <figure id="resultMidMedia" class="media-frame result-media" hidden>
+              <img class="media-image" src="assets/result-mid.jpg" alt="中等结果配图：有内味了"
+                   loading="lazy"
+                   onload="this.parentElement.classList.add('is-loaded');"
+                   onerror="this.hidden = true; this.parentElement.classList.add('is-fallback');">
+              <figcaption class="media-fallback">
+                <span class="media-fallback__file">assets/result-mid.jpg 占位</span>
+                <span class="media-fallback__hint">中等结果（50–84 分）配图</span>
+              </figcaption>
+            </figure>
+
+            <figure id="resultLowMedia" class="media-frame result-media" hidden>
+              <img class="media-image" src="assets/result-low.jpg" alt="低分结果配图：不太像"
+                   loading="lazy"
+                   onload="this.parentElement.classList.add('is-loaded');"
+                   onerror="this.hidden = true; this.parentElement.classList.add('is-fallback');">
+              <figcaption class="media-fallback">
+                <span class="media-fallback__file">assets/result-low.jpg 占位</span>
+                <span class="media-fallback__hint">低分（50 分以下）结果配图</span>
+              </figcaption>
+            </figure>
+          </div>
+
+          <details class="debug-details">
+            <summary>查看调试信息</summary>
+            <dl class="debug-grid">
+              <div><dt>录音时长</dt><dd id="debugRecordDuration">--</dd></div>
+              <div><dt>有效时长</dt><dd id="debugEffectiveDuration">--</dd></div>
+              <div><dt>帧数</dt><dd id="debugFrameCount">--</dd></div>
+              <div><dt>MFCC 维度</dt><dd id="debugMfccDims">--</dd></div>
+              <div><dt>频谱余弦值（去 c0）</dt><dd id="debugCosine">--</dd></div>
+              <div><dt>包络相关系数（最佳对齐）</dt><dd id="debugEnvelope">--</dd></div>
+            </dl>
+          </details>
+
+          <div class="button-row">
+            <button id="retryBtn" class="btn btn--primary btn--wide" type="button">重新录制</button>
+          </div>
+          <p class="privacy-note">录音只在内存中分析，不会上传到任何服务器。</p>
+        </article>
+      </section>
+
+      <section id="screenError" class="screen" aria-labelledby="errorTitle" hidden>
+        <article class="card error-card">
+          <div class="error-badge" aria-hidden="true">!</div>
+          <p class="eyebrow">OOPS</p>
+          <h2 id="errorTitle" tabindex="-1">这次没算成</h2>
+          <p id="errorMessage" class="error-message"></p>
+          <div class="button-row">
+            <button id="errorHomeBtn" class="btn btn--primary btn--wide" type="button">返回开始</button>
+          </div>
+          <p class="form-hint">检查好麦克风与参考音频后，再试一次吧。</p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p class="footer-note">录音只在浏览器本地处理，不会上传 · 素材版权归各自提供者所有 · 仅供娱乐</p>
+    </footer>
+  </div>
+
+  <noscript>
+    <div class="noscript-warning">这个小游戏需要启用 JavaScript 才能录音和评分。</div>
+  </noscript>
+</body>
+</html>
